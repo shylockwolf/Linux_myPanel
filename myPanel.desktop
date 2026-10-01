@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=myPanel
+Name[zh_CN]=myPanel
+GenericName=File and Application Panel
+GenericName[zh_CN]=文件与应用面板
+Comment=Lightweight panel for frequently used files, folders and applications
+Comment[zh_CN]=管理常用文件、文件夹与应用的轻量面板
+Exec=__EXEC__
+Icon=myPanel
+Terminal=false
+Categories=Utility;FileTools;
+Keywords=panel;launcher;shortcut;file;folder;application;
+Keywords[zh_CN]=面板;启动器;快捷方式;文件;文件夹;应用;
+StartupNotify=true
+StartupWMClass=myPanel

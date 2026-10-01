@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- myPanel 应用图标：四列槽位面板的抽象示意 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="2" y="2" width="60" height="60" rx="12" ry="12" fill="url(#bg)"/>
+
+  <!-- 四列槽位 -->
+  <g fill="#ffffff">
+    <rect x="11" y="13" width="9" height="9" rx="2" opacity="0.95"/>
+    <rect x="23" y="13" width="9" height="9" rx="2" opacity="0.95"/>
+    <rect x="35" y="13" width="9" height="9" rx="2" opacity="0.95"/>
+    <rect x="47" y="13" width="6" height="9" rx="2" opacity="0.55"/>
+
+    <rect x="11" y="25" width="9" height="9" rx="2" opacity="0.95"/>
+    <rect x="23" y="25" width="9" height="9" rx="2" opacity="0.80"/>
+    <rect x="35" y="25" width="9" height="9" rx="2" opacity="0.55"/>
+    <rect x="47" y="25" width="6" height="9" rx="2" opacity="0.45"/>
+
+    <rect x="11" y="37" width="9" height="9" rx="2" opacity="0.80"/>
+    <rect x="23" y="37" width="9" height="9" rx="2" opacity="0.55"/>
+    <rect x="35" y="37" width="9" height="9" rx="2" opacity="0.45"/>
+    <rect x="47" y="37" width="6" height="9" rx="2" opacity="0.35"/>
+  </g>
+
+  <!-- 底部状态条 -->
+  <rect x="11" y="51" width="42" height="3" rx="1.5" fill="#ffffff" opacity="0.5"/>
+</svg>
