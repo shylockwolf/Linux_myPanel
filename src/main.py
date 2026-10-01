@@ -29,7 +29,7 @@ from PySide6.QtCore import (
     QUrl,
     Signal,
 )
-from PySide6.QtGui import QDesktopServices, QIcon
+from PySide6.QtGui import QDesktopServices, QFontMetrics, QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -48,6 +48,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QStyle,
     QVBoxLayout,
     QWidget,
@@ -61,6 +62,17 @@ COLUMNS = 4
 SLOT_CAPACITY = 200  # 4 列 × 每列最多 50
 DEFAULT_ITEM_COUNT = 9
 MAX_ITEM_COUNT = 50
+
+# 布局尺寸（PRD §5.1，单位 logical px）
+SLOT_NAME_WIDTH = 62   # 名称固定区域宽度：超长在区域内截断，按钮位置不随之偏移
+SLOT_MIN_WIDTH = 173   # 边距12 + 图标32 + 间距12 + 名称62 + 打开30 + 清除22 + 余量
+SLOT_MIN_HEIGHT = 40   # 图标 / 名称 / 按钮全部同一行后的自然高度
+GRID_H_SPACING = 0
+GRID_V_SPACING = 6
+GRID_MARGIN = 10  # 槽位网格上下留白
+GRID_SIDE_MARGIN = 20  # 槽位网格左右留白
+# 槽位网格之外的高度：顶部栏 + 外接卷区 + 窗口外边距（实测）
+WINDOW_CHROME_HEIGHT = 132
 
 CONFIG_DIR = pathlib.Path(
     os.environ.get("XDG_CONFIG_HOME", str(pathlib.Path.home() / ".config"))
@@ -327,7 +339,8 @@ class DesktopServices:
                     icon = QIcon.fromTheme(name)
                     if not icon.isNull():
                         return icon
-            return style.standardIcon(QStyle.SP_ApplicationIcon)
+            # Qt6 没有 SP_ApplicationIcon，用桌面图标作为 .desktop 的通用回退
+            return style.standardIcon(QStyle.SP_DesktopIcon)
 
         if p.is_dir():
             icon = QIcon.fromTheme("folder")
@@ -542,6 +555,36 @@ class AppChooserDialog(QDialog):
         self.accept()
 
 
+class ElidedLabel(QLabel):
+    """单行标签：宽度固定，放不下时用省略号截断（完整文本由调用方放进 tooltip）。"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._full_text = ""
+
+    def full_text(self) -> str:
+        return self._full_text
+
+    def set_full_text(self, text: str):
+        self._full_text = text or ""
+        self._refresh()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._refresh()
+
+    def _refresh(self):
+        if not self._full_text:
+            self.setText("")
+            return
+        metrics = QFontMetrics(self.font())
+        if metrics.horizontalAdvance(self._full_text) <= self.width():
+            # 放得下就原样显示，避免 elidedText 在宽度刚好够时也插入省略号
+            self.setText(self._full_text)
+            return
+        self.setText(metrics.elidedText(self._full_text, Qt.ElideMiddle, self.width()))
+
+
 class SlotWidget(QWidget):
     """单个槽位（PRD §4.1 / §5.1）。不包含任何文件/卷管理逻辑。"""
 
@@ -555,23 +598,25 @@ class SlotWidget(QWidget):
         super().__init__(parent)
         self.index = index
         self.target_path = ""
-        self.setMinimumSize(120, 80)
+        self.setMinimumSize(SLOT_MIN_WIDTH, SLOT_MIN_HEIGHT)
+        # 垂直方向固定高度：高度由内容决定，避免被网格拉伸后
+        # 在槽位内部出现大片空白。
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(2)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(6, 4, 6, 4)
+        layout.setSpacing(4)
 
         self.icon_label = QLabel()
         self.icon_label.setAlignment(Qt.AlignCenter)
         self.icon_label.setFixedSize(self.ICON_SIZE, self.ICON_SIZE)
 
-        self.name_label = QLabel()
-        self.name_label.setAlignment(Qt.AlignCenter)
-        self.name_label.setWordWrap(True)
+        self.name_label = ElidedLabel()
+        # 名称占用固定宽度的区域：超长在区域内截断，右侧按钮位置不随文本长度偏移
+        self.name_label.setFixedWidth(SLOT_NAME_WIDTH)
+        self.name_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.name_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
-        buttons = QHBoxLayout()
-        buttons.setSpacing(2)
         self.open_btn = QPushButton()
         self.open_btn.setFixedSize(30, 24)
         self.open_btn.clicked.connect(self._on_open_clicked)
@@ -579,14 +624,13 @@ class SlotWidget(QWidget):
         self.clear_btn.setFixedSize(22, 22)
         self.clear_btn.setToolTip(self.tr("清除该槽位"))
         self.clear_btn.clicked.connect(self.clear_requested.emit)
-        buttons.addStretch()
-        buttons.addWidget(self.open_btn)
-        buttons.addWidget(self.clear_btn)
-        buttons.addStretch()
 
+        # 图标 / 名称 / 打开 / 清除 紧凑地靠左排列（名称紧贴图标，按钮紧跟名称）
+        layout.addWidget(self.icon_label, 0, Qt.AlignVCenter)
+        layout.addWidget(self.name_label, 0, Qt.AlignVCenter)
+        layout.addWidget(self.open_btn, 0)
+        layout.addWidget(self.clear_btn, 0)
         layout.addStretch()
-        layout.addWidget(self.name_label, 0, Qt.AlignHCenter)
-        layout.addLayout(buttons)
 
         self.set_target("")
 
@@ -594,24 +638,22 @@ class SlotWidget(QWidget):
 
     def set_target(self, path: str):
         self.target_path = path or ""
-        has_target = bool(self.target_path)
 
-        if not has_target:
-            self.name_label.setText(self.tr("添加"))
+        if not self.target_path:
+            self._full_name = self.tr("添加")
             self.name_label.setToolTip(self.tr("点击「+」选择文件、文件夹或应用"))
             self.open_btn.setText("+")
             self.open_btn.setToolTip(self.tr("添加目标"))
         else:
-            name = DesktopServices.display_name(self.target_path)
-            self.name_label.setText(name)
-            exists = pathlib.Path(self.target_path).exists()
-            tip = self.target_path
-            if not exists:
+            self._full_name = DesktopServices.display_name(self.target_path)
+            tip = f"{self._full_name}\n{self.target_path}"
+            if not pathlib.Path(self.target_path).exists():
                 tip += "\n" + self.tr("⚠ 目标不存在或不可访问，请重新定位或清除")
             self.name_label.setToolTip(tip)
             self.open_btn.setText(self.tr("开"))
             self.open_btn.setToolTip(self.tr("打开：%s") % self.target_path)
 
+        self.name_label.set_full_text(getattr(self, "_full_name", ""))
         self._refresh_icon()
 
     def _refresh_icon(self):
@@ -984,8 +1026,11 @@ class MyPanelWindow(QMainWindow):
 
         self.slots_host = QWidget()
         self.slots_layout = QGridLayout(self.slots_host)
-        self.slots_layout.setSpacing(10)
-        self.slots_layout.setContentsMargins(20, 10, 20, 10)
+        self.slots_layout.setHorizontalSpacing(GRID_H_SPACING)
+        self.slots_layout.setVerticalSpacing(GRID_V_SPACING)
+        self.slots_layout.setContentsMargins(
+            GRID_SIDE_MARGIN, GRID_MARGIN, GRID_SIDE_MARGIN, GRID_MARGIN
+        )
 
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
@@ -1099,18 +1144,42 @@ class MyPanelWindow(QMainWindow):
             self.slots_layout.setColumnStretch(c, 1)
         for r in range(rows):
             self.slots_layout.setRowStretch(r, 0)
+        # 多余空间全部塞给最后一行（空行），避免被均分到各槽位行
+        # 而在槽位之间撑出大片空白。
+        self.slots_layout.setRowStretch(rows, 1)
 
         self._apply_window_size(rows, cols)
 
     def _apply_window_size(self, rows: int, cols: int):
         """按当前布局调整窗口尺寸（PRD §5.1）。"""
         if self.is_large:
-            width = max(1200, cols * 250 + 40)
+            # 每列只占一个槽位所需的宽度：槽位内容紧贴列宽，
+            # 列内不再留下大片空白（否则只调列间距肉眼看不出差别）。
+            width = cols * (SLOT_MIN_WIDTH + GRID_H_SPACING) + 2 * GRID_SIDE_MARGIN
         else:
             width = 350
-        height = max(450, 100 + 55 + rows * 90 + 60)
+
+        # 用实际槽位高度（sizeHint）而不是最小高度，避免估算偏小
+        sample = next(iter(self._slot_widgets.values()), None)
+        row_h = sample.sizeHint().height() if sample is not None else SLOT_MIN_HEIGHT
+        # 别忘了网格自身的上下留白
+        slots_h = (
+            rows * row_h
+            + max(0, rows - 1) * GRID_V_SPACING
+            + 2 * GRID_MARGIN
+        )
+
+        height = max(450, slots_h + WINDOW_CHROME_HEIGHT)
         if not self.isMaximized() and not self.isFullScreen():
-            self.resize(width, min(height, 900))
+            self.resize(width, min(height, self._max_window_height()))
+
+    def _max_window_height(self) -> int:
+        """不超过屏幕可用高度，避免窗口超出显示器。"""
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen is None:
+            return 900
+        available = screen.availableGeometry().height()
+        return max(450, available - 80)
 
     # ---- 槽位动作 ----
 
