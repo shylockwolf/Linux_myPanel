@@ -1,0 +1,318 @@
+# myPanel English translation catalog.
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\nLanguage: en\nMIME-Version: 1.0\nPlural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "JSON 配置 (*.json);;所有文件 (*)"
+msgstr "JSON configuration (*.json);;All files (*)"
+
+msgid "isLargePanel 必须是布尔值。"
+msgstr "isLargePanel must be a boolean."
+
+msgid "language 必须是字符串。"
+msgstr "language must be a string."
+
+msgid "lastOpenedFiles 必须是路径数组。"
+msgstr "lastOpenedFiles must be an array of paths."
+
+msgid "macOS 应用不能在 Linux 启动，请重新定位为 Linux 应用。"
+msgstr "macOS applications cannot run on Linux. Relocate this target to a Linux application."
+
+msgid "preferences 必须是对象。"
+msgstr "preferences must be an object."
+
+msgid "⚠ 目标不存在或不可访问，请重新定位或清除"
+msgstr "⚠ Target is missing or inaccessible. Relocate or clear it."
+
+msgid "不支持配置版本：%s"
+msgstr "Unsupported configuration version: %s"
+
+msgid "主题"
+msgstr "Theme"
+
+msgid "仅卸载"
+msgstr "Unmounted only"
+
+msgid "从已安装应用中选择…"
+msgstr "Choose an installed application…"
+
+msgid "作者：%s"
+msgstr "Author: %s"
+
+msgid "保存失败"
+msgstr "Could not save"
+
+msgid "全局重置…"
+msgstr "Reset everything…"
+
+msgid "全部弹出"
+msgstr "Eject all"
+
+msgid "共 %d 个应用"
+msgstr "%d applications"
+
+msgid "关闭会丢失本次未保存的更改，原配置保持不变。仍要关闭吗？"
+msgstr "Closing will discard your unsaved changes. The original configuration will remain unchanged. Close anyway?"
+
+msgid "减少每列槽位数"
+msgstr "Decrease slots per column"
+
+msgid "刷新"
+msgstr "Refresh"
+
+msgid "卸载失败：%s"
+msgstr "Unmount failed: %s"
+
+msgid "卸载此设备的全部 %d 个卷并请求安全弹出"
+msgstr "Unmount all %d volumes on this device and request safe removal"
+
+msgid "原配置受保护，未写入。请在设置中导入或明确恢复保存。"
+msgstr "The original configuration is protected and was not overwritten. Import a valid configuration or explicitly recover it in Settings."
+
+msgid "原配置已备份到：%s"
+msgstr "Original configuration backed up to: %s"
+
+msgid "启动应用失败：%s"
+msgstr "Could not launch application: %s"
+
+msgid "增加每列槽位数"
+msgstr "Increase slots per column"
+
+msgid "备份失败：%s；自动保存已禁用。"
+msgstr "Backup failed: %s. Automatic saving is disabled."
+
+msgid "外接卷"
+msgstr "External volumes"
+
+msgid "外接设备"
+msgstr "External device"
+
+msgid "大面板 (4列)"
+msgstr "4-column panel"
+
+msgid "失败"
+msgstr "Failed"
+
+msgid "存在未保存的更改"
+msgstr "Unsaved changes"
+
+msgid "完成：安全弹出 %d，仅卸载 %d，失败 %d"
+msgstr "Finished: safely removed %d, unmounted only %d, failed %d"
+
+msgid "导入失败"
+msgstr "Import failed"
+
+msgid "导入完成"
+msgstr "Import complete"
+
+msgid "导入配置"
+msgstr "Import configuration"
+
+msgid "导入配置…"
+msgstr "Import configuration…"
+
+msgid "将先备份原文件，再用当前面板配置替换它。备份失败时不会覆盖。确定继续吗？"
+msgstr "The original file will be backed up before the current panel replaces it. Nothing will be overwritten if the backup fails. Continue?"
+
+msgid "将导入 %d 个目标，每列 %d 行。\n当前配置会先备份，随后替换；来源文件保持不变。"
+msgstr "Import %d targets with %d rows per column.\nThe current configuration will be backed up before replacement. The source file will remain unchanged."
+
+msgid "已保存"
+msgstr "Saved"
+
+msgid "已卸载，但安全弹出失败：%s"
+msgstr "Unmounted, but safe removal failed: %s"
+
+msgid "已卸载；设备不支持安全弹出或断电。"
+msgstr "Unmounted only. This device does not support safe ejection or power-off."
+
+msgid "已安全弹出"
+msgstr "Safely removed"
+
+msgid "弹出"
+msgstr "Eject"
+
+msgid "弹出：%s"
+msgstr "Eject: %s"
+
+msgid "当前使用临时空配置；原文件不会自动覆盖。请导入有效配置，或在设置中明确恢复保存。"
+msgstr "Using a temporary empty configuration. The original file will not be overwritten automatically. Import a valid file or explicitly recover saving in Settings."
+
+msgid "恢复并保存当前配置…"
+msgstr "Recover and save current configuration…"
+
+msgid "所有文件 (*)"
+msgstr "All files (*)"
+
+msgid "打开：%s"
+msgstr "Open: %s"
+
+msgid "搜索应用…"
+msgstr "Search applications…"
+
+msgid "操作超时，设备状态未知；请刷新后检查。"
+msgstr "The operation timed out and device state is unknown. Refresh and check the device."
+
+msgid "操作超时，请检查目标是否可访问。"
+msgstr "The operation timed out. Check whether the target is accessible."
+
+msgid "操作进行中"
+msgstr "Operation in progress"
+
+msgid "无外接设备"
+msgstr "No external devices"
+
+msgid "无效主题已恢复为跟随系统。"
+msgstr "Invalid theme reset to Follow system."
+
+msgid "无效或不可用的应用启动项：\n%s"
+msgstr "Invalid or unavailable application entry:\n%s"
+
+msgid "无效的修改时间元数据已忽略。"
+msgstr "Invalid modification-time metadata was ignored."
+
+msgid "无效的每列数量已按原始配置长度重新推断。"
+msgstr "Invalid row count was inferred again from the original configuration length."
+
+msgid "无法保存配置：%s"
+msgstr "Could not save configuration: %s"
+
+msgid "无法可靠推断旧配置布局；全部 %d 项按原始顺序保留，可增大数量并切换大面板查看。"
+msgstr "Legacy layout could not be inferred reliably. All %d entries were preserved in their original order. Increase the row count and enable the large panel to view them."
+
+msgid "无法打开"
+msgstr "Could not open"
+
+msgid "无法查询外接设备：%s"
+msgstr "Could not query external devices: %s"
+
+msgid "无法读取应用列表：%s"
+msgstr "Could not read applications: %s"
+
+msgid "无法读取配置：%s"
+msgstr "Could not read configuration: %s"
+
+msgid "更换目标 / 重新定位"
+msgstr "Change target / Relocate"
+
+msgid "槽位必须是空字符串或不含 NUL 的绝对路径。"
+msgstr "Slots must contain empty strings or absolute paths without NUL characters."
+
+msgid "正在卸载 %d/%d：%s"
+msgstr "Unmounting %d/%d: %s"
+
+msgid "正在安全弹出：%s"
+msgstr "Safely removing: %s"
+
+msgid "正在查询外接设备…"
+msgstr "Querying external devices…"
+
+msgid "正在读取应用列表…"
+msgstr "Loading applications…"
+
+msgid "每列槽位数"
+msgstr "Slots per column"
+
+msgid "浅色"
+msgstr "Light"
+
+msgid "深色"
+msgstr "Dark"
+
+msgid "添加"
+msgstr "Add"
+
+msgid "添加目标"
+msgstr "Add target"
+
+msgid "清除该槽位"
+msgstr "Clear this slot"
+
+msgid "点击「+」选择文件、文件夹或应用"
+msgstr "Click + to select a file, folder or application"
+
+msgid "版本 2 配置必须包含 200 个槽位和有效的每列数量。"
+msgstr "Version 2 configurations must contain 200 slots and a valid row count."
+
+msgid "目标不存在或不可访问：\n%s"
+msgstr "Target is missing or inaccessible:\n%s"
+
+msgid "确认全局重置"
+msgstr "Confirm reset"
+
+msgid "确认导入"
+msgstr "Confirm import"
+
+msgid "确认恢复保存"
+msgstr "Confirm recovery"
+
+msgid "系统默认应用无法打开：\n%s"
+msgstr "The default application could not open:\n%s"
+
+msgid "设备 %d/%d：%s"
+msgstr "Device %d/%d: %s"
+
+msgid "设备仍有挂载卷，未执行断电；请刷新后重试。"
+msgstr "The device still has mounted volumes. Power-off was not attempted. Refresh and retry."
+
+msgid "设备已移除或挂载状态已改变，请刷新。"
+msgstr "The device was removed or its mount state changed. Refresh the list."
+
+msgid "设备操作尚未完成，请等待结果后再关闭。"
+msgstr "A device operation is still in progress. Wait for its result before closing."
+
+msgid "设置"
+msgstr "Settings"
+
+msgid "该槽位尚未设置目标。"
+msgstr "This slot has no target."
+
+msgid "语言"
+msgstr "Language"
+
+msgid "语言变更在重启后对界面文本生效"
+msgstr "Language changes take effect after restarting"
+
+msgid "请选择要放入槽位的内容："
+msgstr "Select a target for this slot:"
+
+msgid "跟随系统"
+msgstr "Follow system"
+
+msgid "这会清空全部槽位目标和应用偏好（主题、语言），且无法撤销。\n\n确定要继续吗？"
+msgstr "This will clear all targets and preferences (theme and language). It cannot be undone.\n\nContinue?"
+
+msgid "选择应用"
+msgstr "Select application"
+
+msgid "选择文件"
+msgstr "Select file"
+
+msgid "选择文件…"
+msgstr "Select file…"
+
+msgid "选择文件夹"
+msgstr "Select folder"
+
+msgid "选择文件夹…"
+msgstr "Select folder…"
+
+msgid "选择目标"
+msgstr "Select target"
+
+msgid "配置内容必须是对象或路径数组。"
+msgstr "Configuration must be an object or an array of paths."
+
+msgid "配置包含 %d 个条目，超过 %d 个槽位；已拒绝读取，原文件保持不变。"
+msgstr "Configuration contains %d entries, exceeding %d slots. It was rejected; the original file remains unchanged."
+
+msgid "配置已导入。语言设置将在重启后生效。"
+msgstr "Configuration imported. Language changes take effect after restarting."
+
+msgid "配置已被其他进程修改，未覆盖。请重新启动以加载最新配置。"
+msgstr "The configuration was changed by another process and was not overwritten. Restart to load the latest version."
+
+msgid "配置提示"
+msgstr "Configuration notice"
+
+msgid "配置文件超过 2 MiB 限制，原文件保持不变。"
+msgstr "Configuration exceeds the 2 MiB limit. The original file remains unchanged."
