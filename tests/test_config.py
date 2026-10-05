@@ -68,9 +68,21 @@ class MigrationTests(unittest.TestCase):
                 migrate_config(raw)
 
     def test_invalid_slot_types_and_relative_paths_rejected(self):
-        for value in (True, None, "relative/file", "/nul\x00path"):
+        # None is coerced to "" (legacy default), not rejected
+        for value in (True, "relative/file", "/nul\x00path"):
             with self.subTest(value=value), self.assertRaises(ConfigError):
                 migrate_config({"lastOpenedFiles": [value]})
+
+    def test_legacy_null_slots_are_coerced_with_notice(self):
+        # 旧版本会把空槽位序列化为 null；不能整个拒绝配置，得归一化并提示
+        # 单列布局：n == count 时 target = i*4，所以路径落到 [0,4,8,12,16]
+        raw = {"lastOpenedFiles": [None, "/usr/bin/x", None, "", "/etc/y"], "itemCount": 5}
+        cfg, notices = migrate_config(raw)
+        self.assertEqual(cfg["lastOpenedFiles"][:20:4], ["", "/usr/bin/x", "", "", "/etc/y"])
+        self.assertTrue(any("Coerced" in n.text() for n in notices))
+        # 真实目标不应该丢
+        self.assertIn("/usr/bin/x", cfg["lastOpenedFiles"])
+        self.assertIn("/etc/y", cfg["lastOpenedFiles"])
 
     def test_invalid_metadata_is_optional_and_non_fatal(self):
         cfg, notices = migrate_config({"lastOpenedFiles": ["/demo/a"], "itemCount": 1, "lastModifiedTimes": [float("nan")]})

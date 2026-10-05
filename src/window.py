@@ -189,7 +189,6 @@ class SlotWidget(QWidget):
         super().__init__(parent)
         self.index = index
         self.target_path = ""
-        self._tasks = AsyncTasks(self)
         self.setMinimumSize(SLOT_MIN_WIDTH, SLOT_MIN_HEIGHT)
         # 垂直方向固定高度：高度由内容决定，避免被网格拉伸后
         # 在槽位内部出现大片空白。
@@ -258,8 +257,16 @@ class SlotWidget(QWidget):
             self.repair_btn.setEnabled(True)
             self.clear_btn.setEnabled(True)
             expected = self.target_path
-            self._tasks.run(lambda: DesktopServices.describe(expected),
-                            lambda result, error: self._metadata_loaded(expected, result, error))
+            # AsyncTasks 挂在 MyPanelWindow 上（见 __init__），所以这里取
+            # self.window().tasks。如果 window() 暂时为 None（极端情况，
+            # 如 widget 尚未 reparent），先放过同步路径的兜底图标，
+            # 让后续交互重新触发。
+            tasks_owner = self.window()
+            if tasks_owner is not None:
+                tasks_owner.tasks.run(
+                    lambda: DesktopServices.describe(expected),
+                    lambda result, error: self._metadata_loaded(expected, result, error),
+                )
 
         self.name_label.set_full_text(getattr(self, "_full_name", ""))
         self._refresh_icon()
@@ -495,6 +502,9 @@ class MyPanelWindow(QMainWindow):
         self._save_error = None
         self._volume_service = volume_service
         self._fix_invariants()
+        # 窗口级共享任务队列。所有槽位的异步元数据加载都走这里，
+        # 避免 _relayout 销毁槽位时挂在 self 上的 QTimer 被一并释放。
+        self.tasks = AsyncTasks(self)
         self._launcher = DesktopLauncher(self)
         self.setWindowTitle(APP_NAME)
         self.setMinimumSize(350, 450)
@@ -672,11 +682,14 @@ class MyPanelWindow(QMainWindow):
             slot.clear_requested.connect(lambda i=cfg_idx: self._on_clear(i))
             slot.repair_requested.connect(lambda i=cfg_idx: self._on_add(i))
 
-            if 0 <= cfg_idx < SLOT_CAPACITY:
-                slot.set_target(lof[cfg_idx])
-
+            # 必须先放入布局，set_target 内部会用 self.window().tasks 派发
+            # 异步图标加载；如果 widget 还没 reparent 到顶层窗口，window()
+            # 会返回 None → AttributeError → 图标和名称都不会被刷新。
             self.slots_layout.addWidget(slot, row, col)
             self._slot_widgets[cfg_idx] = slot
+
+            if 0 <= cfg_idx < SLOT_CAPACITY:
+                slot.set_target(lof[cfg_idx])
 
         for c in range(COLUMNS):
             self.slots_layout.setColumnStretch(c, 1 if c < cols else 0)

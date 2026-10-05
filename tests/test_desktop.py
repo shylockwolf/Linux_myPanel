@@ -90,6 +90,44 @@ class DesktopTests(unittest.TestCase):
         wait_until(lambda: not tasks._tasks)
         self.assertEqual(len(results), 1)
 
+    def test_metadata_icon_falls_back_to_xdg_hicolor(self):
+        """Qt's fromTheme returns null on offscreen, but the PNG may still exist
+        under XDG_DATA_DIRS/icons/hicolor/. The icon should still resolve."""
+        import os, tempfile
+        from PySide6.QtWidgets import QStyle
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["XDG_DATA_DIRS"] = tmp
+            icon_dir = pathlib.Path(tmp) / "icons" / "hicolor" / "48x48" / "apps"
+            icon_dir.mkdir(parents=True)
+            (icon_dir / "demo-app.png").write_bytes(b"\x89PNG\r\n\x1a\n")  # valid header
+            style = QApplication.instance().style()
+            icon = DesktopServices.metadata_icon(("theme", ["demo-app"]), style)
+            self.assertFalse(icon.isNull(), "should resolve via XDG fallback")
+
+    def test_metadata_icon_falls_back_across_multiple_sizes(self):
+        """Largest match wins so the icon stays crisp at any scale."""
+        import os, tempfile
+        from PySide6.QtWidgets import QStyle
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["XDG_DATA_DIRS"] = tmp
+            base = pathlib.Path(tmp) / "icons" / "hicolor"
+            for size in ("24x24", "48x48", "128x128"):
+                (base / size / "apps").mkdir(parents=True, exist_ok=True)
+                (base / size / "apps" / "multi.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+            icon = DesktopServices.metadata_icon(("theme", ["multi"]), QApplication.instance().style())
+            self.assertFalse(icon.isNull())
+
+    def test_metadata_icon_safe_with_path_traversal_name(self):
+        """A malicious icon name (e.g. ../../etc/passwd) must not escape the search root."""
+        from PySide6.QtWidgets import QStyle
+        # _locate_xdg_icon must refuse path traversal before filesystem access
+        self.assertIsNone(DesktopServices._locate_xdg_icon("../../etc/passwd"))
+        self.assertIsNone(DesktopServices._locate_xdg_icon(""))
+        self.assertIsNone(DesktopServices._locate_xdg_icon("a/b"))
+        # metadata_icon still falls back to the standard file icon, never a real file
+        icon = DesktopServices.metadata_icon(("theme", ["../../etc/passwd"]), QApplication.instance().style())
+        self.assertFalse(icon.isNull(), "fallback to SP_FileIcon is expected")
+
     def test_launch_failure_is_reported_without_retrying_a_different_entry(self):
         launcher = DesktopLauncher()
         outcomes = []

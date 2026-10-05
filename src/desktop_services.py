@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 import time
 from concurrent.futures import Future
@@ -154,10 +155,46 @@ class DesktopServices:
         icon = QIcon(value) if kind == "file" and value else QIcon()
         if kind == "theme":
             for name in value:
+                # QIcon.fromTheme uses Qt's own theme engine. On many Linux
+                # desktops the active Qt theme is incomplete (or missing),
+                # while the actual icon PNG exists under XDG hicolor. Try
+                # the Qt path first, then fall back to a direct XDG search
+                # so icons like google-chrome / bytedance-feishu still render.
                 icon = QIcon.fromTheme(name)
                 if not icon.isNull():
                     break
+                resolved = DesktopServices._locate_xdg_icon(name)
+                if resolved:
+                    icon = QIcon(resolved)
+                    if not icon.isNull():
+                        break
         return icon if not icon.isNull() else style.standardIcon(QStyle.SP_FileIcon)
+
+    @staticmethod
+    def _locate_xdg_icon(name):
+        """Find an icon by bare name under XDG_DATA_DIRS/icons/hicolor/.
+
+        Returns the smallest existing PNG/SVG path, or None if not found.
+        No filesystem caching — called from the UI thread, infrequent.
+        """
+        if not name or "/" in name or "\\" in name:
+            return None
+        bases = os.environ.get("XDG_DATA_DIRS", "/usr/share:/usr/local/share").split(":")
+        candidates = []
+        for base in bases:
+            if not base:
+                continue
+            for size_dir in ("scalable", "256x256", "128x128", "96x96",
+                             "64x64", "48x48", "32x32", "24x24", "22x22",
+                             "16x16"):
+                for ext in (".svg", ".png"):
+                    path = os.path.join(base, "icons", "hicolor", size_dir, "apps", name + ext)
+                    if os.path.isfile(path):
+                        candidates.append(path)
+        if not candidates:
+            return None
+        # Prefer the largest match for crisp rendering at any size
+        return candidates[0]
 
     @staticmethod
     def prepare_target(path):
