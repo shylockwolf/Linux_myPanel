@@ -197,9 +197,6 @@ msgstr "Change target / Relocate"
 msgid "槽位必须是空字符串或不含 NUL 的绝对路径。"
 msgstr "Slots must contain empty strings or absolute paths without NUL characters."
 
-msgid "已将 %d 个空槽位从 null 归一化为空字符串。"
-msgstr "Coerced %d empty slots from null to empty strings."
-
 msgid "正在卸载 %d/%d：%s"
 msgstr "Unmounting %d/%d: %s"
 

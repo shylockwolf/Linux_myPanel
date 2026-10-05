@@ -2,6 +2,10 @@
 
 面向 Ubuntu 26.04 / Xubuntu 的文件、文件夹和桌面应用快捷面板。产品需求见 [PRD](myPanel-Linux-PRD.md)。
 
+## 当前版本
+
+**v1.5.1**（2026-10-05）
+
 ## 从源码运行
 
 在已有 Python 3、PySide6 QtWidgets、PyGObject/GIO 和 UDisks2 的桌面环境中，从仓库根目录执行：
@@ -12,7 +16,7 @@ python3 scripts/run_panel.py
 
 本轮实际验证环境为 Ubuntu 26.04、Python 3.14.4、PySide6/Qt 6.10.2。文件打开、应用启动和图标元数据使用 GIO；外接存储列表和设备操作使用 UDisks2 系统 D-Bus 接口。不需要以 root 运行应用。
 
-设置中可导入旧版 JSON 配置、切换主题和语言；语言在重启后生效。每个已配置槽位的 `↻` 按钮可重新选择目标。失效路径不会自动清除。系统不支持断电/弹出时，会明确显示“仅卸载”；断电失败不会显示为安全弹出成功。
+设置中可导入旧版 JSON 配置、切换主题和语言；语言在重启后生效。每个已配置槽位的 `↻` 按钮可重新选择目标。失效路径不会自动清除。系统不支持断电/弹出时，会明确显示"仅卸载"；断电失败不会显示为安全弹出成功。
 
 ## 配置格式和保护
 
@@ -47,3 +51,18 @@ QT_QPA_PLATFORM=offscreen PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 \
 - `localization.py` / `locales/`：gettext 和英语目录；Qt 标准对话框使用 Qt 翻译。
 - `metadata.py` / `data/app.json`：应用版本、作者和日期。
 - `main.py`：应用启动和主题、语言初始化。
+
+## 变更日志
+
+### 1.5.1 — 2026-10-05
+
+- 修复槽位图标丢失：`_relayout` 销毁旧槽位时，`AsyncTasks` 挂在槽位上的 `QTimer` 会被一起释放，导致元数据异步回调返回时目标 widget 已悬空 → `icon_label.setPixmap(...)` 静默失效。把 `AsyncTasks` 提升为窗口级共享任务队列 (`MyPanelWindow.tasks`)，槽位通过 `self.window().tasks.run(...)` 提交任务，回调仍用 `expected` 字符串防过期。已用离屏脚本验证所有配置槽位的 pixmap 非空。
+
+### 1.5.0 — 2026-10-05
+
+- 模块化拆分：原 `src/main.py` 拆为 `main.py`（引导）/`window.py`（界面）/`config_store.py`（配置）/`desktop_services.py`（桌面集成）/`volume_service.py`（外接卷）/`localization.py`（本地化）/`metadata.py`（版本元数据）。
+- 隐藏槽位保留：缩小列数/切单列后再保存时不再清空被隐藏行/列的数据（修掉了原 `_save_config` 重建数组填可见槽位的 bug）。
+- 损坏 JSON 处理：改为先备份为 `.json.corrupt` 再回退 + 启动提示，不再静默覆盖。
+- 紧凑布局：槽位高度按内容固定、行间距/列间距可调；窗口宽度按内容计算，紧凑不再多出大块空白。
+- 名称区固定宽度，超长文本在区域内用省略号截断，按钮位置不随名称长度偏移。
+- 新增测试套件 `tests/`：`unittest discover -s tests`。

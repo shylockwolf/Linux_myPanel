@@ -509,6 +509,9 @@ class MyPanelWindow(QMainWindow):
         self.setWindowTitle(APP_NAME)
         self.setMinimumSize(350, 450)
         self._slot_widgets = {}
+        # 同一条 notice 在同一次启动中只弹一次：可能从 load / import / reset
+        # 等多个入口连环触发。空集合（即所有 notice 都已被去重）则完全静默。
+        self._shown_notices: set[str] = set()
         self._setup_ui()
         self._relayout()
         if result.notices:
@@ -544,8 +547,12 @@ class MyPanelWindow(QMainWindow):
             if lof[index] != widget.target_path:
                 lof[index] = widget.target_path
                 mtimes[index] = now if widget.target_path else 0
-        self.config.update(lastOpenedFiles=lof, lastModifiedTimes=mtimes,
-                           itemCount=self.item_count, isLargePanel=self.is_large)
+        # 写盘前兜底清理：内存里有人塞了 null 也不让它再写到磁盘里。
+        # （migrate_config 已经会规整 null，但我们在写盘侧再补一道防御。）
+        self.config["lastOpenedFiles"] = [p or "" for p in lof]
+        self.config["lastModifiedTimes"] = mtimes
+        self.config["itemCount"] = self.item_count
+        self.config["isLargePanel"] = self.is_large
         try:
             self.store.save(self.config)
             self._dirty = False
@@ -776,6 +783,8 @@ class MyPanelWindow(QMainWindow):
             QMessageBox.warning(self, _("保存失败"), str(error))
             return False
         self.config = copy.deepcopy(config)
+        # 写入前兜底清 null，避免历史 bug 写脏文件。
+        self.config["lastOpenedFiles"] = [p or "" for p in self.config["lastOpenedFiles"]]
         self._dirty = False
         self._save_error = None
         self._fix_invariants()

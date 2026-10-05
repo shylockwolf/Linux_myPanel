@@ -101,24 +101,22 @@ def migrate_config(raw):
     n = len(original)
     if n > SLOT_CAPACITY:
         raise ConfigError("配置包含 %d 个条目，超过 %d 个槽位；已拒绝读取，原文件保持不变。", n, SLOT_CAPACITY)
-    # 旧版本会把空槽位序列化为 null；按空字符串归一化，而不是整个
-    # 拒绝配置（用户会失去全部已配置目标）。只对真正错误的条目报错。
+    # 把 null / 非字符串条目悄悄归一化为 ""：
+    #   - 旧版本的 bug 偶尔会把空槽位写成 null
+    #   - 我们不该因为这种无害的历史脏数据就向用户弹"配置提示"
+    # 只对真正错误的数据结构抛 ConfigError，让用户知道。
     sanitized = []
-    coerced_nulls = 0
     for p in original:
-        if p is None:
-            coerced_nulls += 1
+        if p is None or p == "":
             sanitized.append("")
         elif isinstance(p, str):
             if "\x00" in p:
                 raise ConfigError("槽位必须是空字符串或不含 NUL 的绝对路径。")
-            if p and not pathlib.PurePosixPath(p).is_absolute():
+            if not pathlib.PurePosixPath(p).is_absolute():
                 raise ConfigError("槽位必须是空字符串或不含 NUL 的绝对路径。")
             sanitized.append(p)
         else:
             raise ConfigError("槽位必须是空字符串或不含 NUL 的绝对路径。")
-    if coerced_nulls:
-        notices.append(Notice("已将 %d 个空槽位从 null 归一化为空字符串。", (coerced_nulls,)))
     original = sanitized
     if count is not None and (type(count) is not int or not 1 <= count <= MAX_ITEM_COUNT):
         notices.append(Notice("无效的每列数量已按原始配置长度重新推断。"))

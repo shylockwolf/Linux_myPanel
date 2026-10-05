@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
-from config_store import ConfigStore, ConfigError, default_config, migrate_config, import_config, MAX_CONFIG_BYTES
+from config_store import ConfigStore, ConfigError, default_config, migrate_config, import_config, MAX_CONFIG_BYTES, SLOT_CAPACITY
 from localization import set_language
 
 
@@ -73,16 +73,31 @@ class MigrationTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ConfigError):
                 migrate_config({"lastOpenedFiles": [value]})
 
-    def test_legacy_null_slots_are_coerced_with_notice(self):
-        # 旧版本会把空槽位序列化为 null；不能整个拒绝配置，得归一化并提示
+    def test_legacy_null_slots_are_coerced_silently(self):
+        # 旧版本会把空槽位序列化为 null；新版静默归一化为 ""，不再向用户弹"配置提示"
         # 单列布局：n == count 时 target = i*4，所以路径落到 [0,4,8,12,16]
         raw = {"lastOpenedFiles": [None, "/usr/bin/x", None, "", "/etc/y"], "itemCount": 5}
         cfg, notices = migrate_config(raw)
         self.assertEqual(cfg["lastOpenedFiles"][:20:4], ["", "/usr/bin/x", "", "", "/etc/y"])
-        self.assertTrue(any("Coerced" in n.text() for n in notices))
+        # 不再追加归一化的提示（属于无害的历史脏数据）
+        self.assertFalse(any("Coerced" in n.text() for n in notices))
         # 真实目标不应该丢
         self.assertIn("/usr/bin/x", cfg["lastOpenedFiles"])
         self.assertIn("/etc/y", cfg["lastOpenedFiles"])
+
+    def test_legacy_null_slots_persist_as_empty_strings_after_save(self):
+        # 兜底防御：save() 之前 window 会把 lof 中所有 None 替换为 ""，避免把
+        # 历史脏数据再写出去。配置层 migrate_config 也做了同样的事。
+        store = ConfigStore()
+        cfg = default_config()
+        cfg["lastOpenedFiles"] = [None] * 5 + ["/usr/bin/x"] + [None] * (SLOT_CAPACITY - 6)
+        cfg["itemCount"] = 1
+        with tempfile.TemporaryDirectory() as td:
+            store.path = pathlib.Path(td) / "myPanel.json"
+            store.save(cfg)
+            disk = json.loads(store.path.read_text(encoding="utf-8"))
+            self.assertEqual(sum(1 for p in disk["lastOpenedFiles"] if p is None), 0)
+            self.assertIn("/usr/bin/x", disk["lastOpenedFiles"])
 
     def test_invalid_metadata_is_optional_and_non_fatal(self):
         cfg, notices = migrate_config({"lastOpenedFiles": ["/demo/a"], "itemCount": 1, "lastModifiedTimes": [float("nan")]})
